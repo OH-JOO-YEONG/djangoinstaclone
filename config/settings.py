@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     'allauth',
     'allauth.account',
     'accounts',
+    'post',
 ]
 
 SITE_ID = 1
