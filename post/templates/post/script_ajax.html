@@ -1,6 +1,8 @@
 <script type="text/javascript">
   (function() {
     const delegation = document.querySelector(".contents_box");
+    const side_box = document.querySelector(".side_box");
+    const header = document.querySelector("#header");
     function delegationFunc(e) {
       let elem = e.target;
 
@@ -154,10 +156,10 @@
           success: function(response) {
             console.log("성공");
             if (response.status) {
-              document.querySelector('input.follow[name=\''+pk+'\']').value =
+              document.querySelector("input.follow[name='" + pk + "']").value =
                 "팔로윙";
             } else {
-              document.querySelector('input.follow[name=\''+pk+'\']').value =
+              document.querySelector("input.follow[name='" + pk + "']").value =
                 "팔로우";
             }
           },
@@ -177,7 +179,87 @@
       }
       elem.classList.toggle("on");
     }
+    function resizefunc() {
+      console.log("리사이즈");
+      if (pageYOffset >= 10) {
+        let calcWidth = window.innerWidth * 0.5 + 167;
+        if (side_box) {
+          side_box.style.left = calcWidth + "px";
+        }
+      }
+    }
 
+    function scrollfuc() {
+      var scrollHeight = pageYOffset + window.innerHeight;
+      var documentHeight = document.body.scrollHeight;
+
+      console.log(pageYOffset);
+      console.log("scrollHeight:" + scrollHeight);
+      console.log("documentHeight:" + documentHeight);
+
+      if (pageYOffset >= 10) {
+        // 스크롤이 10 아래로 내려가면 header와 sidebox 이름에다 on 첨가
+        header.classList.add("on");
+        resizefunc();
+        if (side_box) {
+          side_box.classList.add("on");
+        }
+      } else {
+        // 아니라면 on 삭제
+        header.classList.remove("on");
+        if (side_box) {
+          side_box.classList.remove("on");
+          side_box.removeAttribute("style");
+        }
+      }
+
+      if (scrollHeight >= documentHeight) {
+        var page = document.querySelector("#page").value;
+        var end_page = {{ posts.paginator.num_pages }}
+        if(page > end_page){
+          return;
+        }
+        document.querySelector('#page').value = parseInt(page) + 1;
+        callMorePostAjax(page);
+      }
+    }
+
+    function callMorePostAjax(page){
+      var end_page = {{ posts.paginator.num_pages }}
+      if(page > end_page) {
+        return;
+      }
+      $.ajax({
+        type:'POST',
+        url:"{% url 'post:post_list' %}",
+        data:{
+          'page':page,
+          'csrfmiddlewaretoken': '{{ csrf_token }}',
+        },
+        dataType: 'html',
+        success: addMorePostAjax,
+        error: function(request, status, error) {
+            alert(
+              "code:" +
+                request.status +
+                "\n" +
+                "message:" +
+                request.responseText +
+                "\n" +
+                "error:" +
+                error
+            );
+          }
+      })
+    }
+
+    function addMorePostAjax(data, textStatus, jqXHR){
+      let post = document.querySelector('#post_list_ajax');
+      post.insertAdjacentHTML("beforeend", data);
+    }
+
+    window.addEventListener("resize", resizefunc);
+    window.addEventListener("scroll", scrollfuc);
     delegation.addEventListener("click", delegationFunc);
   })();
 </script>
